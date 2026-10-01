@@ -51,3 +51,13 @@ test("다시 받은 공고도 이전 상세 정보 유지", () => {
   assert.equal(notices[0].detailAt, "t");
   assert.equal(notices[0].status, "접수중");
 });
+
+test("어린이집·상가 등 비주거 공고는 목록·알림에서 제외", () => {
+  const {notices: prev} = merge(null, [n("a")], now);
+  const {notices, newOnes} = merge({notices: prev}, [
+    n("a"), n("kids", "2026-09-30", {detailType: "가정어린이집"}), n("shop", "2026-09-30", {detailType: "단지내상가"}),
+    n("home", "2026-09-30", {detailType: "행복주택"}),
+  ], now);
+  assert.deepEqual(notices.map((x) => x.id).sort(), ["a", "home"]);
+  assert.deepEqual(newOnes.map((x) => x.id), ["home"]);
+});

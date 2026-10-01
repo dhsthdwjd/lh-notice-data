@@ -4,7 +4,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const {TYPES, REGIONS, fetchNotices, buildMessages} = require("./lib");
+const {TYPES, REGIONS, fetchNotices, buildMessages, isResidential} = require("./lib");
 const {fetchDetail} = require("./detail");
 
 const OUT = path.join(__dirname, "..", "docs", "notices.json");
@@ -54,7 +54,7 @@ function merge(prev, fetched, now) {
   const newOnes = [];
   for (const n of fetched) {
     const old = prevById.get(n.id);
-    if (!old && prev && !byId.has(n.id)) newOnes.push(n);
+    if (!old && prev && !byId.has(n.id) && isResidential(n)) newOnes.push(n);
     byId.set(n.id, {
       ...n,
       firstSeenAt: old?.firstSeenAt ?? nowIso,
@@ -64,6 +64,7 @@ function merge(prev, fetched, now) {
   }
   const notices = [...byId.values()]
       .filter((n) => !n.noticeDate || n.noticeDate >= cutoff)
+      .filter(isResidential)
       .sort((a, b) =>
         (b.noticeDate ?? "").localeCompare(a.noticeDate ?? "") ||
         a.id.localeCompare(b.id));

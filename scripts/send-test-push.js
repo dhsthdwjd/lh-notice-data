@@ -4,7 +4,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const {buildMessages, topicOf, REGIONS, TYPES} = require("./lib");
+const {buildMessages, topicOf, REGIONS, TYPES, isResidential} = require("./lib");
 
 async function main() {
   const regionCode = process.argv[2] || "41";
@@ -15,7 +15,7 @@ async function main() {
 
   const file = path.join(__dirname, "..", "docs", "notices.json");
   const {notices} = JSON.parse(fs.readFileSync(file, "utf8"));
-  const n = notices.find((x) => x.regionCode === regionCode && x.typeCode === typeCode) ??
+  const n = notices.find((x) => x.regionCode === regionCode && x.typeCode === typeCode && isResidential(x)) ??
     {id: "", name: "테스트 공고", regionCode, typeCode, regionName: REGIONS[regionCode]};
 
   const [msg] = buildMessages([n]);

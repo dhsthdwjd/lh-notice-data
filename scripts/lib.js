@@ -98,6 +98,14 @@ function apiError(body) {
   return bad ? `SS_CODE=${bad.SS_CODE}` : null;
 }
 
+// 주거용이 아닌 공고 (세부 유형에 이 말이 있으면 수집·알림에서 뺀다). 앱 values/arrays.xml 과 같게
+const NON_RESIDENTIAL = ["어린이집", "상가", "점포", "토지", "용지", "주차장", "근린"];
+
+function isResidential(n) {
+  const t = n.detailType ?? "";
+  return !NON_RESIDENTIAL.some((w) => t.includes(w));
+}
+
 /** API 한 줄 → 앱에서 쓰는 공고 객체 */
 function toNotice(r, typeCode, regionCode) {
   const url = str(r.DTL_URL);
@@ -203,6 +211,8 @@ function buildMessages(newNotices) {
 
 module.exports = {
   str,
+  isResidential,
+  NON_RESIDENTIAL,
   encodeKey,
   TYPES,
   REGIONS,
