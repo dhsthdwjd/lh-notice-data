@@ -29,3 +29,9 @@ LH_API_KEY=키 npm run sync   # FIREBASE_SERVICE_ACCOUNT 없으면 푸시는 건
   "detailType", "regionCode", "regionName", "status", "noticeDate", "closeDate", "url",
   "mobileUrl", "firstSeenAt" } ] }
 ```
+
+## 띠별 운세
+
+- 원본: `source/daily_zodiac.json` (기간 동안 매일 12띠의 총운·금전운·애정운·조언·키워드)
+- 배포: `docs/zodiac/YYYY-MM-DD.json` (하루치), `docs/zodiac/index.json` (기간 안내)
+- 갱신(1년에 한 번): 원본 파일을 바꾸고 `npm run zodiac` 실행 → 커밋·푸시
