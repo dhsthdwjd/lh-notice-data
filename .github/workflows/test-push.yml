@@ -1,0 +1,31 @@
+# 테스트 알림 보내기 (Actions 탭 → test-push → Run workflow)
+# 앱 [알림 설정]에서 같은 지역·유형을 켜 둔 기기로 알림이 간다.
+name: test-push
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "지역 코드 (11 서울, 41 경기, 28 인천, 26 부산 …)"
+        default: "41"
+        required: true
+      type:
+        description: "유형 코드 (06 임대주택, 13 주거복지, 05 분양주택, 39 신혼희망타운)"
+        default: "06"
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 테스트 알림
+        run: node scripts/test-push.js "${{ inputs.region }}" "${{ inputs.type }}"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

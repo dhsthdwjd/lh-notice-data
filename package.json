@@ -8,7 +8,8 @@
     "sync": "node scripts/sync.js",
     "try": "node scripts/try-fetch.js",
     "test": "node --test",
-    "probe": "node scripts/probe-detail.js"
+    "probe": "node scripts/probe-detail.js",
+    "test-push": "node scripts/test-push.js"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0"
