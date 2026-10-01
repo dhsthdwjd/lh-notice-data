@@ -5,10 +5,15 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const {TYPES, REGIONS, fetchNotices, buildMessages} = require("./lib");
+const {fetchDetail} = require("./detail");
 
 const OUT = path.join(__dirname, "..", "docs", "notices.json");
 // 앱이 보여주는 기간과 맞춤: 공고일이 이보다 오래되면 파일에서 뺀다
 const KEEP_DAYS = 120;
+// 접수 중인 공고의 상세 정보는 이 시간이 지나면 다시 받는다
+const DETAIL_TTL_MS = 20 * 3600 * 1000;
+// 한 번 실행에 상세를 받을 최대 공고 수 (API 호출 = 이 값 × 2). 나머지는 다음 실행에
+const DETAIL_PER_RUN = 120;
 
 async function fetchJson(url) {
   const res = await fetch(url, {signal: AbortSignal.timeout(30_000)});
@@ -50,7 +55,12 @@ function merge(prev, fetched, now) {
   for (const n of fetched) {
     const old = prevById.get(n.id);
     if (!old && prev && !byId.has(n.id)) newOnes.push(n);
-    byId.set(n.id, {...n, firstSeenAt: old?.firstSeenAt ?? nowIso});
+    byId.set(n.id, {
+      ...n,
+      firstSeenAt: old?.firstSeenAt ?? nowIso,
+      // 상세 정보는 따로 받으므로 이전 값을 이어받는다
+      ...(old?.detail ? {detail: old.detail, detailAt: old.detailAt} : {}),
+    });
   }
   const notices = [...byId.values()]
       .filter((n) => !n.noticeDate || n.noticeDate >= cutoff)
@@ -58,6 +68,35 @@ function merge(prev, fetched, now) {
         (b.noticeDate ?? "").localeCompare(a.noticeDate ?? "") ||
         a.id.localeCompare(b.id));
   return {notices, newOnes};
+}
+
+function isClosed(n, today) {
+  if (/마감|완료|취소/.test(n.status ?? "")) return true;
+  return !!n.closeDate && n.closeDate < today;
+}
+
+/** 상세가 없거나(새 공고), 접수 중인데 오래된 공고의 상세·공급 정보를 채운다 */
+async function fillDetails(key, notices, now) {
+  const today = kstToday(now);
+  const need = notices.filter((n) => n.codes && (
+    !n.detailAt ||
+    (!isClosed(n, today) && now - new Date(n.detailAt) > DETAIL_TTL_MS)));
+  // 상세가 아예 없는 것 먼저, 그다음 접수 중 갱신
+  need.sort((a, b) => (a.detailAt ? 1 : 0) - (b.detailAt ? 1 : 0));
+  let ok = 0;
+  let fail = 0;
+  for (const n of need.slice(0, DETAIL_PER_RUN)) {
+    try {
+      n.detail = await fetchDetail({key, notice: n, fetchJson}) ?? undefined;
+      n.detailAt = now.toISOString();
+      ok++;
+    } catch (e) {
+      fail++;
+      console.warn(e.message);
+      if (/서비스키|LIMITED|TRAFFIC/i.test(e.message)) break; // 키·한도 문제면 그만
+    }
+  }
+  console.log(`상세 정보: 대상 ${need.length}건 중 ${ok}건 갱신, 실패 ${fail}건`);
 }
 
 async function sendPush(newOnes) {
@@ -100,6 +139,7 @@ async function main() {
 
   const prev = readPrevious();
   const {notices, newOnes} = merge(prev, fetched, now);
+  await fillDetails(key, notices, now);
 
   // 내용이 같으면 파일을 건드리지 않는다 → 커밋·배포 없음
   if (prev && JSON.stringify(prev.notices) === JSON.stringify(notices)) {

@@ -116,6 +116,13 @@ function toNotice(r, typeCode, regionCode) {
     closeDate: toIso(r.CLSG_DT),
     url: isHttp(url) ? url : null,
     mobileUrl: isHttp(mobileUrl) ? mobileUrl : null,
+    // 상세·공급 API 호출에 필요한 코드
+    codes: {
+      spl: str(r.SPL_INF_TP_CD),
+      ccr: str(r.CCR_CNNT_SYS_DS_CD),
+      upp: str(r.UPP_AIS_TP_CD) || typeCode,
+      ais: str(r.AIS_TP_CD),
+    },
   };
 }
 
@@ -195,6 +202,8 @@ function buildMessages(newNotices) {
 }
 
 module.exports = {
+  str,
+  encodeKey,
   TYPES,
   REGIONS,
   lhDate,

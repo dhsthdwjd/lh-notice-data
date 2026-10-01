@@ -43,3 +43,11 @@ test("같은 공고가 여러 지역 조회에 나와도 신규 1건", () => {
   const {newOnes} = merge({notices: prev}, [n("b", "2026-09-30", {regionCode: "11"}), n("b", "2026-09-30", {regionCode: "41"})], now);
   assert.equal(newOnes.length, 1);
 });
+
+test("다시 받은 공고도 이전 상세 정보 유지", () => {
+  const prev = {notices: [{...n("a"), firstSeenAt: "x", detail: {summary: {households: 3}}, detailAt: "t"}]};
+  const {notices} = merge(prev, [n("a", "2026-09-30", {status: "접수중"})], now);
+  assert.equal(notices[0].detail.summary.households, 3);
+  assert.equal(notices[0].detailAt, "t");
+  assert.equal(notices[0].status, "접수중");
+});
