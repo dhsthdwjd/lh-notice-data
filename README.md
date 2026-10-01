@@ -3,7 +3,7 @@
 LH 공고 알림 앱의 데이터 저장소. GitHub Actions 가 매시간(한국시간 07~22시) LH 분양임대공고를 수집해
 `docs/notices.json` 을 갱신하고, GitHub Pages 로 배포한다. 앱은 이 파일 하나만 받는다.
 
-- 데이터 주소: `https://<사용자명>.github.io/lh-notice-data/notices.json`
+- 데이터 주소: `https://dhsthdwjd.github.io/lh-notice-data/notices.json`
 - 새 공고가 생기면 FCM 토픽(`lh_{지역}_{유형}`)으로 푸시를 보낸다.
 
 ## 처음 설정
