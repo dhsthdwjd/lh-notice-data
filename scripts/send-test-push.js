@@ -1,5 +1,5 @@
 // 테스트 알림 보내기: notices.json 에서 해당 지역·유형의 최신 공고 하나로 실제와 같은 알림을 보낸다.
-// 사용: FIREBASE_SERVICE_ACCOUNT='{...}' node scripts/test-push.js 41 06
+// 사용: FIREBASE_SERVICE_ACCOUNT='{...}' node scripts/send-test-push.js 41 06
 "use strict";
 
 const fs = require("node:fs");

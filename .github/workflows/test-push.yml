@@ -26,6 +26,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: 테스트 알림
-        run: node scripts/test-push.js "${{ inputs.region }}" "${{ inputs.type }}"
+        run: node scripts/send-test-push.js "${{ inputs.region }}" "${{ inputs.type }}"
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

@@ -9,7 +9,7 @@
     "try": "node scripts/try-fetch.js",
     "test": "node --test",
     "probe": "node scripts/probe-detail.js",
-    "test-push": "node scripts/test-push.js"
+    "test-push": "node scripts/send-test-push.js"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0"
