@@ -15,13 +15,24 @@ const DETAIL_TTL_MS = 20 * 3600 * 1000;
 // 한 번 실행에 상세를 받을 최대 공고 수 (API 호출 = 이 값 × 2). 나머지는 다음 실행에
 const DETAIL_PER_RUN = 120;
 
-async function fetchJson(url) {
-  const res = await fetch(url, {signal: AbortSignal.timeout(30_000)});
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    return text;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** 연결 실패(네트워크·타임아웃·5xx)는 잠깐 쉬고 최대 3번까지 다시 시도 */
+async function fetchJson(url, tries = 3) {
+  for (let i = 1; ; i++) {
+    try {
+      const res = await fetch(url, {signal: AbortSignal.timeout(30_000)});
+      if (res.status >= 500 && i < tries) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return text;
+      }
+    } catch (e) {
+      if (i >= tries) throw e;
+      await sleep(3000 * i);
+    }
   }
 }
 
@@ -134,8 +145,10 @@ async function main() {
     }
   }
   if (failures.length) console.warn(`수집 실패 ${failures.length}건\n${failures.join("\n")}`);
+  // 전부 실패 = LH API(공공데이터포털) 일시 장애. 이전 데이터를 그대로 두고 정상 종료 → 다음 실행에 다시 시도
   if (failures.length === Object.keys(TYPES).length * Object.keys(REGIONS).length) {
-    throw new Error(`전체 수집 실패: ${failures[0]}`);
+    console.warn(`::warning::LH API 응답 없음 (${failures[0]}). 이전 데이터 유지, 다음 실행에 다시 시도`);
+    return;
   }
 
   const prev = readPrevious();

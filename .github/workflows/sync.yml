@@ -4,8 +4,9 @@ name: sync
 
 on:
   schedule:
-    # 한국시간 07~22시 매시 5분 (UTC 22~13시). GitHub 사정으로 몇 분~수십 분 늦을 수 있음
-    - cron: "5 22,23,0-13 * * *"
+    # 한국시간 07~22시 매시 23분 (UTC 22~13시).
+    # 정각 근처는 GitHub 예약 실행이 몰려 지연·누락되기 쉬워서 피함
+    - cron: "23 22,23,0-13 * * *"
   workflow_dispatch: {}   # Actions 탭에서 수동 실행
 
 permissions:
